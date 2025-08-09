@@ -4,9 +4,20 @@ This repository contains a collection of cursor rules for different projects. Ea
 
 ## How to Use
 
-### Step 1: Clone the Repository
+### Method 1: Git Submodule (Recommended)
 
-First, clone this repository to your project's `.cursor/rules` directory:
+Add this repository as a git submodule to your project for better integration and version tracking:
+
+```bash
+git submodule add git@github.com:Chrissi1601/cursor-rules.git .cursor/rules
+git submodule update --init
+git add .gitmodules .cursor/rules
+git commit -m "Add cursor-rules submodule"
+```
+
+### Method 2: Direct Clone
+
+Alternatively, clone this repository directly to your project's `.cursor/rules` directory:
 
 ```bash
 git clone git@github.com:Chrissi1601/cursor-rules.git .cursor/rules
