@@ -1,0 +1,578 @@
+// TypeScript implementation of the Yarn story
+
+export interface StoryNodeInterface {
+  id: string;
+  title: string;
+  commands?: CommandInterface[];
+  dialogue: DialogueItemInterface[];
+  choices?: ChoiceInterface[];
+  next?: string;
+}
+
+export interface CommandInterface {
+  type: 'background' | 'audio' | 'variable' | 'character' | 'transition' | 'flag' | 'wait';
+  action?: string;
+  asset?: string;
+  name?: string;
+  value?: any;
+  character?: string;
+  expression?: string;
+  position?: string;
+  transition?: string;
+  duration?: number;
+  loop?: boolean;
+  volume?: number;
+  fadeIn?: number;
+}
+
+export interface DialogueItemInterface {
+  type: 'narration' | 'speech' | 'wait' | 'transition';
+  text?: string;
+  speaker?: string;
+  duration?: number;
+  action?: string;
+}
+
+export interface ChoiceInterface {
+  text: string;
+  next: string;
+  condition?: ConditionInterface;
+}
+
+export interface ConditionInterface {
+  type: 'variable';
+  name: string;
+  operator: '==' | '!=' | '>' | '<' | '>=' | '<=';
+  value: any;
+}
+
+export interface StoryDataInterface {
+  metadata: {
+    title: string;
+    author: string;
+    version: string;
+    startNode: string;
+  };
+  variables: Record<string, any>;
+  nodes: Record<string, StoryNodeInterface>;
+  assets: {
+    backgrounds: string[];
+    audio: {
+      bgm: string[];
+      se: string[];
+      voice: string[];
+    };
+    characters: Record<string, {
+      name: string;
+      expressions: string[];
+    }>;
+  };
+}
+
+export const storyData: StoryDataInterface = {
+  metadata: {
+    title: "Forest Adventure",
+    author: "Unknown",
+    version: "1.0.0",
+    startNode: "Start"
+  },
+  
+  variables: {
+    courage: false,
+    pathStarted: false
+  },
+  
+  nodes: {
+    Start: {
+      id: "Start",
+      title: "Forest Entrance",
+      commands: [
+        {
+          type: "background",
+          action: "set",
+          asset: "forest.jpg",
+          transition: "fade",
+          duration: 1000
+        },
+        {
+          type: "audio",
+          action: "playBgm",
+          asset: "peaceful-forest.ogg",
+          loop: true,
+          volume: 0.7
+        }
+      ],
+      dialogue: [
+        {
+          type: "narration",
+          text: "You find yourself standing at the edge of a mystical forest."
+        },
+        {
+          type: "narration",
+          text: "The ancient trees seem to whisper secrets in the wind."
+        },
+        {
+          type: "wait",
+          duration: 1000
+        },
+        {
+          type: "speech",
+          speaker: "Mysterious Voice",
+          text: "Welcome, traveler. I've been expecting you."
+        }
+      ],
+      choices: [
+        {
+          text: "Enter the forest",
+          next: "EnterForest"
+        },
+        {
+          text: "Turn back",
+          next: "TurnBack"
+        }
+      ]
+    },
+    
+    EnterForest: {
+      id: "EnterForest",
+      title: "Entering the Forest",
+      commands: [
+        {
+          type: "audio",
+          action: "playSe",
+          asset: "footsteps-grass.ogg"
+        },
+        {
+          type: "variable",
+          action: "set",
+          name: "courage",
+          value: true
+        }
+      ],
+      dialogue: [
+        {
+          type: "narration",
+          text: "You take a deep breath and step into the forest."
+        },
+        {
+          type: "narration",
+          text: "The canopy above filters the sunlight into dancing patterns."
+        },
+        {
+          type: "speech",
+          speaker: "Mysterious Voice",
+          text: "Brave choice. Your courage will serve you well."
+        }
+      ],
+      next: "MeetGuide"
+    },
+    
+    TurnBack: {
+      id: "TurnBack",
+      title: "Turning Back",
+      commands: [
+        {
+          type: "variable",
+          action: "set",
+          name: "courage",
+          value: false
+        }
+      ],
+      dialogue: [
+        {
+          type: "narration",
+          text: "You hesitate, feeling the weight of the unknown."
+        },
+        {
+          type: "speech",
+          speaker: "Mysterious Voice",
+          text: "Fear is natural, but sometimes we must face it."
+        },
+        {
+          type: "speech",
+          speaker: "Mysterious Voice",
+          text: "The forest will wait for you when you're ready."
+        },
+        {
+          type: "wait",
+          duration: 2000
+        },
+        {
+          type: "transition",
+          action: "fadeOut",
+          duration: 1000
+        },
+        {
+          type: "narration",
+          text: "THE END"
+        }
+      ],
+      next: "Start"
+    },
+    
+    MeetGuide: {
+      id: "MeetGuide",
+      title: "Meeting the Guide",
+      commands: [
+        {
+          type: "character",
+          action: "show",
+          character: "guide",
+          expression: "neutral",
+          position: "center",
+          transition: "fade"
+        },
+        {
+          type: "audio",
+          action: "playVoice",
+          asset: "guide-intro-01.ogg"
+        }
+      ],
+      dialogue: [
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "I am the Guardian of these woods."
+        },
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "You seek something, don't you? All who enter here do."
+        }
+      ],
+      choices: [
+        {
+          text: "Ask about the forest",
+          next: "AskForest"
+        },
+        {
+          text: "Ask about yourself",
+          next: "AskSelf"
+        },
+        {
+          text: "Show confidence",
+          next: "ShowConfidence",
+          condition: {
+            type: "variable",
+            name: "courage",
+            operator: "==",
+            value: true
+          }
+        }
+      ]
+    },
+    
+    AskForest: {
+      id: "AskForest",
+      title: "Asking About the Forest",
+      dialogue: [
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "This forest is ancient, older than memory itself."
+        },
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "It tests those who enter, revealing their true nature."
+        }
+      ],
+      next: "ForestPath"
+    },
+    
+    AskSelf: {
+      id: "AskSelf",
+      title: "Asking About Yourself",
+      dialogue: [
+        {
+          type: "speech",
+          speaker: "You",
+          text: "Who am I? Why am I here?"
+        },
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "Those are questions only you can answer, traveler."
+        },
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "The forest will help you remember, in time."
+        }
+      ],
+      next: "ForestPath"
+    },
+    
+    ShowConfidence: {
+      id: "ShowConfidence",
+      title: "Showing Confidence",
+      commands: [
+        {
+          type: "character",
+          action: "show",
+          character: "guide",
+          expression: "smile",
+          position: "center"
+        }
+      ],
+      dialogue: [
+        {
+          type: "speech",
+          speaker: "You",
+          text: "I'm not afraid. Show me what this forest holds."
+        },
+        {
+          type: "narration",
+          text: "*smiles*",
+          speaker: "Guide"
+        },
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "Good. Confidence will light your way."
+        },
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "But remember, true strength comes from wisdom, not bravado."
+        }
+      ],
+      next: "ForestPath"
+    },
+    
+    ForestPath: {
+      id: "ForestPath",
+      title: "The Forest Path",
+      commands: [
+        {
+          type: "background",
+          action: "set",
+          asset: "forest-path.jpg",
+          transition: "dissolve",
+          duration: 1000
+        },
+        {
+          type: "flag",
+          action: "set",
+          name: "pathStarted",
+          value: true
+        }
+      ],
+      dialogue: [
+        {
+          type: "narration",
+          text: "The guide leads you deeper into the forest."
+        },
+        {
+          type: "narration",
+          text: "The path ahead splits in two directions."
+        },
+        {
+          type: "speech",
+          speaker: "Guide",
+          text: "Choose your path wisely. Each leads to different trials."
+        }
+      ],
+      choices: [
+        {
+          text: "Take the sunlit path",
+          next: "SunlitPath"
+        },
+        {
+          text: "Take the shadowed path",
+          next: "ShadowedPath"
+        }
+      ]
+    },
+    
+    SunlitPath: {
+      id: "SunlitPath",
+      title: "The Sunlit Path",
+      commands: [
+        {
+          type: "background",
+          action: "set",
+          asset: "sunlit-grove.jpg",
+          transition: "fade",
+          duration: 1000
+        },
+        {
+          type: "audio",
+          action: "playBgm",
+          asset: "cheerful-theme.ogg",
+          fadeIn: 2000
+        }
+      ],
+      dialogue: [
+        {
+          type: "narration",
+          text: "The sunlit path opens into a beautiful grove."
+        },
+        {
+          type: "narration",
+          text: "Flowers bloom in impossible colors around you."
+        },
+        {
+          type: "narration",
+          text: "TO BE CONTINUED..."
+        }
+      ]
+    },
+    
+    ShadowedPath: {
+      id: "ShadowedPath",
+      title: "The Shadowed Path",
+      commands: [
+        {
+          type: "background",
+          action: "set",
+          asset: "dark-forest.jpg",
+          transition: "fade",
+          duration: 1000
+        },
+        {
+          type: "audio",
+          action: "playBgm",
+          asset: "mysterious-theme.ogg",
+          fadeIn: 2000
+        }
+      ],
+      dialogue: [
+        {
+          type: "narration",
+          text: "The shadows grow deeper as you walk."
+        },
+        {
+          type: "narration",
+          text: "You hear strange whispers in the darkness."
+        },
+        {
+          type: "narration",
+          text: "TO BE CONTINUED..."
+        }
+      ]
+    }
+  },
+  
+  assets: {
+    backgrounds: [
+      "forest.jpg",
+      "forest-path.jpg",
+      "sunlit-grove.jpg",
+      "dark-forest.jpg"
+    ],
+    audio: {
+      bgm: [
+        "peaceful-forest.ogg",
+        "cheerful-theme.ogg",
+        "mysterious-theme.ogg"
+      ],
+      se: [
+        "footsteps-grass.ogg"
+      ],
+      voice: [
+        "guide-intro-01.ogg"
+      ]
+    },
+    characters: {
+      guide: {
+        name: "Guide",
+        expressions: ["neutral", "smile"]
+      }
+    }
+  }
+};
+
+// Helper class to run the story
+export class StoryRunner {
+  private currentNode: string;
+  private variables: Record<string, any>;
+  private history: string[] = [];
+  
+  constructor(private storyData: StoryDataInterface) {
+    this.currentNode = storyData.metadata.startNode;
+    this.variables = { ...storyData.variables };
+  }
+  
+  getCurrentNode(): StoryNodeInterface {
+    return this.storyData.nodes[this.currentNode];
+  }
+  
+  executeCommands(commands?: CommandInterface[]): void {
+    if (!commands) return;
+    
+    commands.forEach(cmd => {
+      switch (cmd.type) {
+        case 'variable':
+          if (cmd.name && cmd.action === 'set') {
+            this.variables[cmd.name] = cmd.value;
+          }
+          break;
+        case 'flag':
+          if (cmd.name && cmd.action === 'set') {
+            this.variables[cmd.name] = cmd.value;
+          }
+          break;
+        // Other command types would be handled by the engine
+      }
+    });
+  }
+  
+  evaluateCondition(condition?: ConditionInterface): boolean {
+    if (!condition) return true;
+    
+    const value = this.variables[condition.name];
+    switch (condition.operator) {
+      case '==': return value === condition.value;
+      case '!=': return value !== condition.value;
+      case '>': return value > condition.value;
+      case '<': return value < condition.value;
+      case '>=': return value >= condition.value;
+      case '<=': return value <= condition.value;
+      default: return true;
+    }
+  }
+  
+  getAvailableChoices(): ChoiceInterface[] {
+    const node = this.getCurrentNode();
+    if (!node.choices) return [];
+    
+    return node.choices.filter(choice => 
+      this.evaluateCondition(choice.condition)
+    );
+  }
+  
+  selectChoice(choiceIndex: number): void {
+    const choices = this.getAvailableChoices();
+    if (choiceIndex >= 0 && choiceIndex < choices.length) {
+      this.history.push(this.currentNode);
+      this.currentNode = choices[choiceIndex].next;
+      const newNode = this.getCurrentNode();
+      this.executeCommands(newNode.commands);
+    }
+  }
+  
+  goToNode(nodeId: string): void {
+    if (this.storyData.nodes[nodeId]) {
+      this.history.push(this.currentNode);
+      this.currentNode = nodeId;
+      const newNode = this.getCurrentNode();
+      this.executeCommands(newNode.commands);
+    }
+  }
+  
+  continueStory(): void {
+    const node = this.getCurrentNode();
+    if (node.next) {
+      this.goToNode(node.next);
+    }
+  }
+  
+  getVariable(name: string): any {
+    return this.variables[name];
+  }
+  
+  setVariable(name: string, value: any): void {
+    this.variables[name] = value;
+  }
+}
