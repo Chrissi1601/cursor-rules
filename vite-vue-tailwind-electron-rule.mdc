@@ -1,28 +1,27 @@
 ---
-description: Rules for Vite + Vue 3 (TS) + Tailwind + shadcn-vue + Electron apps
-alwaysApply: true
+description: Rules for Vite + Vue 3 (TS) + Tailwind + Electron apps
+alwaysApply: false
 ---
+## Vite + Vue + Tailwind + Electron Project Rule
 
-## Vite + Vue + Tailwind + shadcn-vue + Electron Project Rule
-
-These rules guide an AI agent building features or fixing bugs in a Vite + Vue 3 (TypeScript) + Tailwind + shadcn-vue application packaged with Electron. Follow them strictly before writing code.
+These rules guide an AI agent building features or fixing bugs in a Vite + Vue 3 (TypeScript) + Tailwind application packaged with Electron. Follow them strictly before writing code.
 
 ### Scope and Existing Rule Integration
 
 - Read and follow these existing rules first:
   - `pinia-rule.mdc` (state management, direct ref access, promise-based actions)
   - `async-requests-rule.mdc` (axios + .then/.catch only)
-  - `ui-rule.mdc` (shadcn-vue first, Tailwind-only styling)
-  - `shadcn-scroll-area-rule.mdc` (ScrollArea height constraints)
   - `types-interfaces-rule.mdc` (centralized types)
   - `makefile-rule.mdc` (only create targets when asked)
+  - `tailwind-v4-integration.mdc` (Tailwind integration specifics)
+  - `frontend-formatting-rule.mdc` (component formatting and import organization)
 
 ### What This Rule Adds (on top of existing rules)
 
 - Electron-specific structure, security, and IPC guidance
 - Vite aliasing and renderer/main/preload boundaries
 - Dev vs prod resource loading for Electron + Vite
-- Minimal Tailwind/shadcn-vue notes specific to Electron contexts
+- Minimal Tailwind notes specific to Electron contexts
 
 ### Project Structure (Renderer + Preload + Main)
 
@@ -56,10 +55,10 @@ export default defineConfig({
 }
 '''
 
-### Tailwind + shadcn-vue (Electron-focused notes)
+### Tailwind Notes (Electron-focused)
 
-- Follow `ui-rule.mdc` and `shadcn-scroll-area-rule.mdc` for component usage and layout.
-- Ensure Tailwind `content` globs include renderer sources and shadcn-vue component paths used by the renderer.
+- Follow `tailwind-v4-integration.mdc` for Tailwind processing rules.
+- Ensure Tailwind `content` globs include renderer sources used by the app.
 - Avoid custom CSS; stick to Tailwind utilities and design tokens in Tailwind config.
 
 ### Electron Security and IPC (Critical)
@@ -100,7 +99,7 @@ window.appApi.getVersion()
 
 ### Component and State (refer to existing rules)
 
-- Components: use Composition API + TS per project standards; see `ui-rule.mdc`.
+- Components: use Composition API + TS per project standards; see `frontend-formatting-rule.mdc`.
 - State: see `pinia-rule.mdc` for direct refs pattern and action constraints.
 - Async/API: see `async-requests-rule.mdc` and `types-interfaces-rule.mdc`.
 

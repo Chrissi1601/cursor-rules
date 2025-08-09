@@ -1,6 +1,0 @@
----
-alwaysApply: true
----
-
-- Use uv for package management.
-- NEVER use pip for package management.

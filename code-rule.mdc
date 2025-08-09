@@ -4,7 +4,6 @@ alwaysApply: true
 
 ## Frontend
 
-- Use shadcn-vue for all UI components.
 - Use tailwind for all CSS styling.
 - Use bun for package management.
 - User pinia for state management
