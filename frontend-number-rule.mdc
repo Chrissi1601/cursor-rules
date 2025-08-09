@@ -1,0 +1,109 @@
+---
+description: used when numbers, frontend, decimals, floating point mentioned
+alwaysApply: false
+---
+# Frontend Number Rule
+
+This application follows strict guidelines for handling decimal numbers to prevent JavaScript floating-point precision issues:
+
+## Big-js Library Usage
+
+- **Decimal Number Handling**: All numbers that can have decimal places MUST use the big-js library
+- **Installation**: Ensure big-js is installed: `bun add big-js`
+- **Import Pattern**: Always import Big from big-js at the top of files that handle decimal numbers
+- **Type Safety**: Use TypeScript interfaces for Big number types when needed
+
+## Implementation Guidelines
+
+### Basic Usage Pattern
+```typescript
+import Big from 'big-js'
+
+// For financial calculations, prices, percentages, etc.
+const price = new Big(10.99)
+const quantity = new Big(5)
+const total = price.times(quantity) // 54.95
+
+// For calculations with decimal precision
+const result = new Big(0.1).plus(0.2) // 0.3 (not 0.30000000000000004)
+```
+
+### API Response Handling
+```typescript
+// When receiving decimal numbers from API
+interface PriceDataInterface {
+  price: string // API returns as string to preserve precision
+  quantity: string
+}
+
+// Convert to Big for calculations
+const priceData: PriceDataInterface = await getPriceData()
+const price = new Big(priceData.price)
+const quantity = new Big(priceData.quantity)
+const total = price.times(quantity)
+```
+
+### Form Input Handling
+```typescript
+// For form inputs that accept decimal numbers
+const handlePriceChange = (value: string) => {
+  try {
+    const price = new Big(value || '0')
+    // Use price for calculations
+  } catch (error) {
+    // Handle invalid number input
+    console.error('Invalid number input:', error)
+  }
+}
+```
+
+### Display Formatting
+```typescript
+// Format Big numbers for display
+const formatCurrency = (amount: Big): string => {
+  return amount.toFixed(2) // Returns string with 2 decimal places
+}
+
+const formatPercentage = (value: Big): string => {
+  return value.times(100).toFixed(2) + '%'
+}
+```
+
+## When to Use Big-js
+
+**ALWAYS use Big-js for:**
+- Financial calculations (prices, amounts, totals)
+- Percentage calculations
+- Trading-related numbers (quantities, prices, balances)
+- Any calculation involving decimal precision
+- API responses containing decimal numbers
+- Form inputs that accept decimal values
+
+**DO NOT use Big-js for:**
+- Integer-only values (counts, IDs, whole numbers)
+- Boolean values
+- String data
+- Date/time values
+
+## Error Handling
+
+- **Invalid Input**: Always wrap Big constructor calls in try-catch blocks
+- **Zero Division**: Handle division by zero explicitly
+- **NaN Values**: Check for NaN results and handle appropriately
+- **String Conversion**: Ensure proper string-to-Big conversion for API data
+
+## Performance Considerations
+
+- **Memory Usage**: Big objects use more memory than primitive numbers
+- **Calculation Speed**: Big calculations are slower than native JavaScript
+- **Optimization**: Only use Big for calculations that require decimal precision
+- **Caching**: Consider caching Big calculations for frequently used values
+
+## Testing
+
+- **Unit Tests**: Test all Big calculations with known expected results
+- **Edge Cases**: Test with very small/large numbers, zero, negative values
+- **Precision Tests**: Verify decimal precision is maintained in calculations
+- **Error Tests**: Test invalid input handling and error scenarios
+
+This rule ensures accurate decimal calculations throughout the frontend application, preventing floating-point precision errors that can cause financial and trading calculation issues. 

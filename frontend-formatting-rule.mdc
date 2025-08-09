@@ -1,0 +1,178 @@
+## Frontend Code Formatting and Import Organization Rule
+
+This application follows strict guidelines for frontend code formatting and import organization to ensure consistency, readability, and maintainability:
+
+### **DOM Element and Component Attributes**
+
+- **Multiline Attributes**: When a DOM element or component has more than one attribute/prop, each attribute/prop must be placed on a new line
+- **Single Attribute Exception**: Elements with only one attribute may remain on a single line
+- **Consistent Indentation**: Each attribute should be properly indented and aligned
+- **Attribute Order**: Follow a logical order for attributes (id, class, data attributes, event handlers, etc.)
+
+#### **Formatting Examples**
+
+**Good - Single Attribute:**
+```vue
+<template>
+  <div class="container">
+    <Button disabled>Click me</Button>
+  </div>
+</template>
+```
+
+**Good - Multiple Attributes:**
+```vue
+<template>
+  <div
+    id="main-container"
+    class="container flex flex-col"
+    data-testid="main-container"
+  >
+    <Button
+      :disabled="isLoading"
+      :variant="buttonVariant"
+      @click="handleClick"
+      @focus="handleFocus"
+    >
+      Click me
+    </Button>
+    
+    <input
+      v-model="inputValue"
+      type="text"
+      placeholder="Enter text"
+      :disabled="isDisabled"
+      @input="handleInput"
+      @blur="handleBlur"
+    />
+  </div>
+</template>
+```
+
+**Bad - Multiple Attributes on Same Line:**
+```vue
+<template>
+  <!-- DON'T DO THIS -->
+  <Button :disabled="isLoading" :variant="buttonVariant" @click="handleClick">Click me</Button>
+  <input v-model="inputValue" type="text" placeholder="Enter text" :disabled="isDisabled" />
+</template>
+```
+
+### **Import Organization and Grouping**
+
+All imports must be organized into specific groups with blank lines separating each group. Imports within each group should be alphabetically sorted.
+
+#### **@ Alias Usage**
+
+- **Always Use @ Alias**: All internal project imports must use the `@` alias instead of relative paths
+- **External Libraries Exception**: Only external libraries (node_modules) should use direct package names
+- **Consistency**: This ensures consistent import paths regardless of file location and improves refactoring safety
+
+#### **Import Group Order**
+
+1. **Vue Framework and Core Libraries** (Vue, Router, Pinia, etc.)
+2. **External Libraries and Dependencies** (Third-party packages from node_modules)
+3. **Composables** (Reusable composition functions)
+4. **Types and Interfaces** (TypeScript type definitions)
+5. **Classes and Utilities** (Helper classes and utility functions)
+6. **Stores** (Pinia stores and state management)
+7. **Components** (Vue components)
+8. **Constants and Configuration** (Environment variables, configuration objects)
+9. **Assets and Static Files** (Images, styles, static resources)
+
+#### **Import Formatting Examples**
+
+**Good - Properly Grouped Imports:**
+```typescript
+// Vue Framework and Core Libraries
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { defineStore } from 'pinia'
+
+// External Libraries and Dependencies
+import axios from 'axios'
+import { format } from 'date-fns'
+import _ from 'lodash'
+
+// Composables
+import { useAuth } from '@/composables/useAuth'
+import { useNotifications } from '@/composables/useNotifications'
+
+// Types and Interfaces
+import type { UserInterface, ApiResponseInterface } from '@/types/user'
+import type { ProductType, CategoryType } from '@/types/product'
+
+// Classes and Utilities
+import { ApiClient } from '@/utils/ApiClient'
+import { formatCurrency, validateEmail } from '@/utils/helpers'
+
+// Stores
+import { useAuthStore } from '@/stores/auth'
+import { useProductStore } from '@/stores/product'
+
+// Components
+import BaseButton from '@/components/BaseButton.vue'
+import ProductCard from '@/components/ProductCard.vue'
+import UserProfile from '@/components/UserProfile.vue'
+
+// Constants and Configuration
+import { API_ENDPOINTS } from '@/constants/api'
+import { VALIDATION_RULES } from '@/constants/validation'
+
+// Assets and Static Files
+import logo from '@/assets/images/logo.png'
+import '@/assets/styles/component-specific.css'
+```
+
+**Bad - Unorganized Imports:**
+```typescript
+// DON'T DO THIS
+import { useAuthStore } from '@/stores/auth'
+import { ref, computed } from 'vue'
+import BaseButton from '@/components/BaseButton.vue'
+import axios from 'axios'
+import type { UserInterface } from '@/types/user'
+import { formatCurrency } from '@/utils/helpers'
+import { API_ENDPOINTS } from '@/constants/api'
+import logo from '@/assets/images/logo.png'
+```
+
+**Bad - Using Relative Paths Instead of @ Alias:**
+```typescript
+// DON'T DO THIS
+import { useAuthStore } from '../stores/auth'
+import type { UserInterface } from '../types/user'
+import BaseButton from './BaseButton.vue'
+import { formatCurrency } from '../../utils/helpers'
+
+// DO THIS INSTEAD - Use @ alias
+import { useAuthStore } from '@/stores/auth'
+import type { UserInterface } from '@/types/user'
+import BaseButton from '@/components/BaseButton.vue'
+import { formatCurrency } from '@/utils/helpers'
+```
+
+### **Benefits of This Approach**
+
+1. **Improved Readability**: Multiline attributes and organized imports make code easier to scan and understand
+2. **Reduced Merge Conflicts**: Consistent formatting reduces git conflicts caused by formatting differences
+3. **Better Maintainability**: Clear organization makes it easier to locate and modify code
+4. **Enhanced Collaboration**: Team members can quickly understand code structure and dependencies
+
+### **Prettier Integration**
+
+Configure Prettier to work alongside ESLint for consistent formatting:
+
+```json
+{
+  "printWidth": 80,
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "useTabs": false,
+  "vueIndentScriptAndStyle": false
+}
+```
+
+This rule ensures that frontend code maintains high standards of organization and readability, making the codebase more maintainable and professional across all team members and projects.

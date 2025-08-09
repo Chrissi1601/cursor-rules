@@ -1,0 +1,36 @@
+---
+alwaysApply: true
+---
+# Tailwind v4 Integration Rule (React + Vite)
+
+Use these requirements to keep Tailwind CSS v4 working reliably and prevent the "unknown utility" / @apply errors.
+
+## Main CSS entry (`app/src/index.css`)
+- Put the Tailwind import first: `@import "tailwindcss";`
+- If you need a JS config, register it after the import: `@config "../tailwind.config.js";`
+- Define layers normally. Do not `@apply` variants (e.g., do not `@apply dark`).
+
+## Any other CSS file that uses `@apply` (e.g., `app/src/App.css`)
+- Start the file with a reference to the main Tailwind entry:
+  `@reference "./index.css";`
+- Only apply built-in Tailwind utilities. Do not `@apply` custom classes (e.g., do not `@apply btn`). Instead, duplicate the needed utilities or author a top-level custom utility and use it directly in markup.
+
+## Dark mode
+- Use the `dark:` variant in markup or selectors. Do not `@apply dark`.
+
+## PostCSS / Vite
+- Keep the Tailwind plugin enabled in `app/postcss.config.js` using `'@tailwindcss/postcss'`.
+- Do not move the CSS entry or rename it without updating imports.
+
+## Project path sanity
+- Frontend lives in `app/`. Do not reference `app/app`.
+- Frontend log file path is `app/app.log`.
+
+## Pre-commit checklist
+- If a CSS file contains `@apply` and lacks a leading `@reference` to `index.css`, add the reference.
+- If a CSS file applies a custom class with `@apply`, replace it with the underlying utilities.
+- Ensure `index.css` has the Tailwind import before other statements.
+
+## Notes
+- Tailwind v4 processes CSS files independently. `@reference` makes utilities/theme available across files.
+- Applying custom classes with `@apply` is not supported in v4; only built-in utilities can be applied.

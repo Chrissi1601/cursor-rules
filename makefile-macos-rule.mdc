@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+# Makefile macOS Shell Path Rule
+
+When working with Makefiles on macOS, follow these shell path requirements to ensure compatibility:
+
+## Shell Path Requirements
+
+- **Makefiles**: On macOS, always set `SHELL := /bin/bash`. Do not use `/usr/bin/bash`.
+- **Shell paths**: Avoid hardcoding non-existent shell paths. Prefer `/bin/bash` for macOS or omit `SHELL` to use `/bin/sh` if Bash features are not required.
+- **Package managers**: Use `bun` for Node.js and `uv` for Python environments. Do not use npm/yarn/pip.
+- **Ports**: When assigning ports for dev servers or proxies, ask for the ports or probe an available port in the 23000–25000 range.
+
+## Rationale
+
+On macOS, `/usr/bin/bash` does not exist by default, causing make errors like "No such file or directory". The standard location for bash on macOS is `/bin/bash`. This prevents build failures and ensures cross-platform compatibility.

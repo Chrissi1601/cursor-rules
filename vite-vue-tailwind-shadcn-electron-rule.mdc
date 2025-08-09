@@ -1,0 +1,125 @@
+---
+description: Rules for Vite + Vue 3 (TS) + Tailwind + shadcn-vue + Electron apps
+alwaysApply: true
+---
+
+## Vite + Vue + Tailwind + shadcn-vue + Electron Project Rule
+
+These rules guide an AI agent building features or fixing bugs in a Vite + Vue 3 (TypeScript) + Tailwind + shadcn-vue application packaged with Electron. Follow them strictly before writing code.
+
+### Scope and Existing Rule Integration
+
+- Read and follow these existing rules first:
+  - `pinia-rule.mdc` (state management, direct ref access, promise-based actions)
+  - `async-requests-rule.mdc` (axios + .then/.catch only)
+  - `ui-rule.mdc` (shadcn-vue first, Tailwind-only styling)
+  - `shadcn-scroll-area-rule.mdc` (ScrollArea height constraints)
+  - `types-interfaces-rule.mdc` (centralized types)
+  - `makefile-rule.mdc` (only create targets when asked)
+
+### What This Rule Adds (on top of existing rules)
+
+- Electron-specific structure, security, and IPC guidance
+- Vite aliasing and renderer/main/preload boundaries
+- Dev vs prod resource loading for Electron + Vite
+- Minimal Tailwind/shadcn-vue notes specific to Electron contexts
+
+### Project Structure (Renderer + Preload + Main)
+
+- Maintain a clear separation between Electron processes:
+  - `main/` (Electron main process)
+  - `preload/` (securely exposed, typed APIs)
+  - `renderer/` or `src/` (Vite + Vue app)
+- Configure path aliases:
+  - In Vite: alias `@` → `./src`
+  - In TS config: map `@/*` → `src/*`
+
+'''ts
+// vite.config.ts (excerpt)
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+})
+'''
+
+'''json
+// tsconfig.json (excerpt)
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] }
+  }
+}
+'''
+
+### Tailwind + shadcn-vue (Electron-focused notes)
+
+- Follow `ui-rule.mdc` and `shadcn-scroll-area-rule.mdc` for component usage and layout.
+- Ensure Tailwind `content` globs include renderer sources and shadcn-vue component paths used by the renderer.
+- Avoid custom CSS; stick to Tailwind utilities and design tokens in Tailwind config.
+
+### Electron Security and IPC (Critical)
+
+- Default security posture:
+  - `contextIsolation: true`
+  - `nodeIntegration: false`
+  - `enableRemoteModule: false`
+  - Strong CSP; never `eval`/`Function` in renderer.
+- Never import `electron` directly in the renderer. Communicate via `preload` using `contextBridge`-exposed, typed APIs.
+- Validate all IPC payloads in `main` and `preload`. Narrow channel surface; prefix channels (e.g., `app:`). Return typed results only.
+- File system, shell, and network access must live in `main` or behind vetted `preload` functions.
+- External links: use `shell.openExternal` after validating protocols; never navigate the renderer to external HTTP(S) directly.
+
+'''ts
+// preload/index.ts (excerpt)
+import { contextBridge, ipcRenderer } from 'electron'
+
+export interface AppApiInterface {
+  getVersion: () => Promise<string>
+}
+
+contextBridge.exposeInMainWorld('appApi', {
+  getVersion: () => ipcRenderer.invoke('app:getVersion'),
+} satisfies AppApiInterface)
+'''
+
+'''ts
+// renderer usage (typed)
+declare global {
+  interface Window { appApi: import('../preload').AppApiInterface }
+}
+
+window.appApi.getVersion()
+  .then((v) => { /* ... */ })
+  .catch((e) => { /* ... */ })
+'''
+
+### Component and State (refer to existing rules)
+
+- Components: use Composition API + TS per project standards; see `ui-rule.mdc`.
+- State: see `pinia-rule.mdc` for direct refs pattern and action constraints.
+- Async/API: see `async-requests-rule.mdc` and `types-interfaces-rule.mdc`.
+
+### Ports and Dev Servers
+
+- When configuring Vite dev server, Electron dev tooling, or proxies:
+  - Ask for the desired port mapping.
+  - If selecting automatically, probe open ports in 23000–25000 and pick a free one. Never hardcode without a check.
+  - Ensure Electron loads the correct dev URL. In production, serve from `file://` protocol only.
+
+### Dev vs Prod Resource Loading
+
+- Development: Electron `main` should load the Vite dev server URL for the renderer (ensure CORS/CSP allow localhost during dev).
+- Production: Load `file://` URLs to packaged renderer assets. No remote HTTP(S) origins in production.
+
+### Operational Checklist (Stack-specific)
+
+- Renderer/main/preload separation is intact; no `electron` imports in renderer.
+- Preload exposes a minimal, typed API surface via `contextBridge`.
+- IPC channels are namespaced (e.g., `app:*`) and validate payloads in `main`.
+- Vite alias `@` resolves to `src` and matches TS config paths.
+- Dev server URL/port is configured explicitly and adheres to port rules (ask or probe 23000–25000).

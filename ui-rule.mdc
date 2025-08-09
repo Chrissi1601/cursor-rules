@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+
+## UI Component Rule
+
+This application uses shadcn-vue as the primary UI component library and follows these guidelines:
+
+- **shadcn-vue Priority**: All UI components should use shadcn-vue components as the first choice
+- **Component Installation**: New components can be added using `bunx --bun shadcn-vue@latest add COMPONENT_NAME`
+- **Component Discovery**: If the component name is not known, refer to the [Shadcn Vue documentation](https://www.shadcn-vue.com/docs/components)
+- **Custom Components**: Only create custom components when no suitable shadcn-vue component exists
+- **Custom Component Structure**: Even custom components should be built using shadcn-vue components as building blocks
+- **Styling**: The application uses Tailwind 4 for all CSS styling
+- **Custom Tailwind Classes**: When creating new reusable components, also create custom Tailwind classes for consistent styling patterns and better maintainability
+- **Package Manager**: Always use bun for package management and component installation
+
+The application prioritizes consistency and maintainability by leveraging the shadcn-vue ecosystem.

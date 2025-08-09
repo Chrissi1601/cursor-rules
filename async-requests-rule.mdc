@@ -1,0 +1,33 @@
+---
+alwaysApply: true
+---
+
+## Async Requests Rule
+
+This application follows strict guidelines for handling asynchronous operations in the frontend:
+
+- **No async/await**: Never use `async` or `await` keywords in JavaScript/TypeScript code
+- **No fetch API**: Never use the native `fetch()` API, always use axios instead
+- **Promise-based Approach**: Always use promise-based syntax with `.then()` and `.catch()`
+- **Consistent Pattern**: All asynchronous operations must follow the pattern:
+  ```javascript
+  // In src/api/v1/users.ts
+  export const getUserData = () => {
+    return axios.get('/api/v1/users')
+      .then((response) => {
+        return response.data
+      })
+      .catch((error) => {
+        // Handle error
+        throw error
+      })
+  }
+  ```
+- **Function Separation**: Create separate axios functions that return promises rather than using async functions
+- **API Organization**: All API requests must be organized in the `src/api/v1/` directory structure
+- **Request Separation**: Separate requests by usecase/category in dedicated files within the api/v1 folder
+- **File Management**: Use existing API files when available, or create new files for new usecases/categories
+- **Error Handling**: Always include proper error handling with `.catch()` blocks
+- **TypeScript Compatibility**: Ensure all promise-based code is properly typed for TypeScript
+
+This rule ensures consistent asynchronous code patterns across the frontend application, maintains compatibility with the project's coding standards, and provides a structured approach to API request organization.

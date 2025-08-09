@@ -1,0 +1,60 @@
+---
+alwaysApply: true
+---
+
+## Comprehensive Testing Rule
+
+This rule ensures comprehensive testing coverage whenever code is changed or added to any project:
+
+### Testing Requirements
+
+- **Comprehensive Test Coverage**: Whenever code is changed or added, write comprehensive tests using best practices and incorporating state-of-the-art test libraries that match the current project's requirements
+- **Test Types**: Include unit tests, integration tests, functional tests, and end-to-end tests as appropriate for the changes
+- **Test Libraries**: Use modern, industry-standard testing frameworks and libraries appropriate for the technology stack
+- **Best Practices**: Follow current testing best practices including:
+  - Test-driven development (TDD) or behavior-driven development (BDD) when appropriate
+  - Proper test isolation and independence
+  - Clear, descriptive test names and documentation
+  - Appropriate test data management and mocking
+  - Performance and security testing where relevant
+
+### Implementation Validation Process
+
+After implementing any code changes, the agent must follow this validation sequence:
+
+1. **Run Tests**: Execute `cd frontend && timeout 30 bun run agent:test` to run all tests in single execution mode with timeout
+2. **Run Linting**: Execute `cd frontend && bun run lint` to ensure code quality standards
+3. **Fix Issues**: Continue testing and fixing any issues until all tests pass and no linting errors remain
+4. **Coverage Check**: Execute `cd frontend && timeout 30 bun run coverage` to check test coverage
+5. **Add Missing Tests**: If coverage is insufficient, add more tests to reach acceptable coverage levels (minimum 80% coverage)
+6. **Timeout Handling**: If any test command hangs for more than 30 seconds, identify and fix hanging tests
+7. **Iterative Process**: Repeat the test-fix cycle until the implementation meets all quality standards
+
+### Command Execution Requirements
+
+- **Test Command**: `cd frontend && timeout 30 bun run agent:test` - Must pass with no failures (runs in single execution mode with 30s timeout)
+- **Lint Command**: `cd frontend && bun run lint` - Must pass with no linting errors
+- **Coverage Command**: `cd frontend && timeout 30 bun run coverage` - Must check and improve coverage as needed (minimum 80% coverage with 30s timeout)
+- **Timeout Prevention**: Commands automatically timeout after 30 seconds to prevent hanging and allow debugging
+- **No Errors Tolerance**: All commands must complete successfully before considering implementation complete
+
+### Hanging Test Prevention
+
+When tests hang and don't complete:
+1. **Identify the Issue**: Cancel the hanging command and analyze newly added tests
+2. **Common Causes**: Infinite loops, unresolved promises, complex component mounting, missing mocks
+3. **Lockfile Corruption Recovery**: If tests continue to hang or bun commands fail with lockfile errors:
+   - Remove corrupted lockfiles: `rm -f frontend/bun.lockb frontend/.bun`
+   - Reinstall dependencies: `cd frontend && bun install`
+   - Retry test execution after dependency reinstallation
+4. **Prevention**: Use proper mocking, avoid complex async operations, and test incrementally
+
+### Quality Assurance
+
+- **Zero Tolerance**: Do not consider any implementation complete until all tests pass successfully
+- **Regression Prevention**: Ensure new changes don't break existing functionality through comprehensive regression testing
+- **Code Quality**: Tests should also validate code quality, maintainability, and adherence to project standards
+- **Coverage Standards**: Maintain high test coverage and add tests when coverage reports indicate gaps
+- **Continuous Improvement**: Regularly review and improve test coverage and testing strategies
+
+This rule applies to all programming languages, frameworks, and project types to ensure consistent quality across all development work.

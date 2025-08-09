@@ -1,0 +1,437 @@
+---
+description: Global Accessibility, Multi-Component Usage, Cross-Page Persistence, Shared State
+alwaysApply: false
+---
+# Pinia Usage Rule
+
+This rule defines when and how to use Pinia stores in Vue applications using the modern direct ref access pattern:
+
+## When to Use a Store
+
+Use Pinia stores for data that meets these criteria:
+
+- **Global Accessibility**: Data that needs to be accessed throughout the application
+- **Multi-Component Usage**: Data used in many places (e.g., user information displayed in navbar)
+- **Cross-Page Persistence**: Data that needs to be preserved through page navigation (e.g., complex multi-step forms)
+- **Shared State**: Information that multiple components need to react to simultaneously
+
+## When NOT to Use a Store
+
+Avoid using stores for:
+
+- **Local Component Data**: Data that could be hosted in a component instead
+- **Page-Specific State**: Local element visibility or page-specific UI state
+- **Temporary Data**: Data that doesn't need to persist or be shared
+- **Component-Specific Logic**: Logic that only affects a single component
+
+## Best Practices
+
+- **Start Local**: Begin with component-local state, only move to stores when needed
+- **Avoid Overuse**: If you feel stores are being used too much, reconsider if some logic should be composables
+- **Composables First**: Use composables for reusable logic before creating stores
+- **Clear Purpose**: Each store should have a clear, specific purpose
+- **Minimal Global State**: Not all applications need global state - only add when necessary
+
+## Implementation Pattern: Direct Ref Access with API Integration
+
+### 1. Create API Endpoints First (src/api/v1/*)
+
+Before creating a store, always create corresponding API endpoints following the async-requests-rule:
+
+```typescript
+// src/api/v1/users.ts
+import axios from 'axios'
+import type { UserInterface, UserCreateRequestInterface, UserUpdateRequestInterface } from '../../types/user'
+import type { ApiResponseInterface } from '../../types/common'
+
+const API_BASE_URL = '/api/v1'
+
+export const getUsers = () => {
+  return axios.get<ApiResponseInterface<UserInterface[]>>(`${API_BASE_URL}/users`)
+    .then((response) => {
+      return response.data.data
+    })
+    .catch((error) => {
+      console.error('Failed to fetch users:', error)
+      throw new Error(error.response?.data?.message || 'Failed to fetch users')
+    })
+}
+
+export const getUserById = (id: number) => {
+  return axios.get<ApiResponseInterface<UserInterface>>(`${API_BASE_URL}/users/${id}`)
+    .then((response) => {
+      return response.data.data
+    })
+    .catch((error) => {
+      console.error('Failed to fetch user:', error)
+      throw new Error(error.response?.data?.message || 'Failed to fetch user')
+    })
+}
+
+export const createUser = (userData: UserCreateRequestInterface) => {
+  return axios.post<ApiResponseInterface<UserInterface>>(`${API_BASE_URL}/users`, userData)
+    .then((response) => {
+      return response.data.data
+    })
+    .catch((error) => {
+      console.error('Failed to create user:', error)
+      throw new Error(error.response?.data?.message || 'Failed to create user')
+    })
+}
+
+export const updateUser = (id: number, updates: UserUpdateRequestInterface) => {
+  return axios.patch<ApiResponseInterface<UserInterface>>(`${API_BASE_URL}/users/${id}`, updates)
+    .then((response) => {
+      return response.data.data
+    })
+    .catch((error) => {
+      console.error('Failed to update user:', error)
+      throw new Error(error.response?.data?.message || 'Failed to update user')
+    })
+}
+
+export const deleteUser = (id: number) => {
+  return axios.delete<ApiResponseInterface<boolean>>(`${API_BASE_URL}/users/${id}`)
+    .then((response) => {
+      return response.data.data
+    })
+    .catch((error) => {
+      console.error('Failed to delete user:', error)
+      throw new Error(error.response?.data?.message || 'Failed to delete user')
+    })
+}
+```
+
+### 2. Create Store Structure with API Integration
+
+```typescript
+// src/stores/user.ts
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import type { UserInterface } from '../types/user'
+import * as userApi from '../api/v1/users'
+
+export const useUserStore = defineStore('user', () => {
+  // State - Direct refs accessible via storeToRefs
+  const users = ref<UserInterface[]>([])
+  const currentUser = ref<UserInterface | null>(null)
+  const isLoading = ref<boolean>(false)
+  const error = ref<string | null>(null)
+
+  // Getters - Only for computed/derived state
+  const usersCount = computed(() => users.value.length)
+  const isAuthenticated = computed(() => currentUser.value !== null)
+  const getUserById = computed(() => {
+    return (id: number) => users.value.find(user => user.id === id)
+  })
+
+  // Actions - Only for API calls and complex operations using promise-based approach
+  const fetchUsers = () => {
+    isLoading.value = true
+    error.value = null
+    
+    return userApi.getUsers()
+      .then((response) => {
+        users.value = response
+        return response
+      })
+      .catch((err) => {
+        error.value = err.message
+        throw err
+      })
+      .finally(() => {
+        isLoading.value = false
+      })
+  }
+
+  const fetchUser = (id: number) => {
+    isLoading.value = true
+    error.value = null
+    
+    return userApi.getUserById(id)
+      .then((user) => {
+        currentUser.value = user
+        return user
+      })
+      .catch((err) => {
+        error.value = err.message
+        throw err
+      })
+      .finally(() => {
+        isLoading.value = false
+      })
+  }
+
+  const createUser = (userData: Omit<UserInterface, 'id'>) => {
+    isLoading.value = true
+    error.value = null
+    
+    return userApi.createUser(userData)
+      .then((newUser) => {
+        users.value.push(newUser)
+        return newUser
+      })
+      .catch((err) => {
+        error.value = err.message
+        throw err
+      })
+      .finally(() => {
+        isLoading.value = false
+      })
+  }
+
+  const updateUser = (id: number, updates: Partial<UserInterface>) => {
+    isLoading.value = true
+    error.value = null
+    
+    return userApi.updateUser(id, updates)
+      .then((updatedUser) => {
+        const userIndex = users.value.findIndex(user => user.id === id)
+        if (userIndex !== -1) {
+          users.value[userIndex] = updatedUser
+        }
+        if (currentUser.value?.id === id) {
+          currentUser.value = updatedUser
+        }
+        return updatedUser
+      })
+      .catch((err) => {
+        error.value = err.message
+        throw err
+      })
+      .finally(() => {
+        isLoading.value = false
+      })
+  }
+
+  const deleteUser = (id: number) => {
+    isLoading.value = true
+    error.value = null
+    
+    return userApi.deleteUser(id)
+      .then((result) => {
+        const userIndex = users.value.findIndex(user => user.id === id)
+        if (userIndex !== -1) {
+          users.value.splice(userIndex, 1)
+        }
+        if (currentUser.value?.id === id) {
+          currentUser.value = null
+        }
+        return result
+      })
+      .catch((err) => {
+        error.value = err.message
+        throw err
+      })
+      .finally(() => {
+        isLoading.value = false
+      })
+  }
+
+  const clearError = () => {
+    error.value = null
+  }
+
+  const reset = () => {
+    users.value = []
+    currentUser.value = null
+    isLoading.value = false
+    error.value = null
+  }
+
+  return {
+    // State
+    users,
+    currentUser,
+    isLoading,
+    error,
+    // Getters
+    usersCount,
+    isAuthenticated,
+    getUserById,
+    // Actions
+    fetchUsers,
+    fetchUser,
+    createUser,
+    updateUser,
+    deleteUser,
+    clearError,
+    reset,
+  }
+})
+```
+
+### 3. Component Usage with Store and API Integration
+
+```typescript
+// In Vue components
+import { storeToRefs } from 'pinia'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
+
+// Use storeToRefs for reactive state and getters
+const { users, currentUser, isLoading, error, usersCount, isAuthenticated } = storeToRefs(userStore)
+
+// Actions can be destructured directly
+const { fetchUsers, createUser, updateUser, deleteUser } = userStore
+
+// Direct state access - no setters needed
+users.value.push(newUser)        // Direct array method
+isLoading.value = true          // Direct assignment
+error.value = null              // Direct reset
+
+// Promise-based API calls in components
+const loadUsers = () => {
+  fetchUsers()
+    .then(() => {
+      console.log('Users loaded successfully')
+    })
+    .catch((err) => {
+      console.error('Failed to load users:', err)
+    })
+}
+
+const addUser = () => {
+  createUser({ name: 'John Doe', email: 'john@example.com' })
+    .then((newUser) => {
+      console.log('User created:', newUser)
+    })
+    .catch((err) => {
+      console.error('Failed to create user:', err)
+    })
+}
+```
+
+## Store Creation Workflow
+
+When creating a new store, follow this workflow:
+
+1. **Create API Endpoints First**: Always start by creating API functions in `src/api/v1/[category].ts`
+2. **Define TypeScript Interfaces**: Create proper types in `src/types/[category].ts`
+3. **Create Store**: Implement the store using the API functions
+4. **Test API Integration**: Ensure all store actions properly use the API functions
+5. **Document Store Purpose**: Add clear documentation about the store's responsibility
+
+## Implementation Guidelines
+
+- **API-First Approach**: Always create API endpoints before implementing store actions
+- **Direct State Access**: Use `storeToRefs` to access state directly, no setter methods needed
+- **Actions for API Only**: Reserve actions for API calls and complex business logic
+- **Promise-Based Requests**: Always use axios with `.then()` and `.catch()`, never async/await
+- **Computed for Derived State**: Use `computed()` only for calculations based on state
+- **No Simple Setters**: Avoid creating setter methods for simple state updates
+- **TypeScript Interfaces**: Use TypeScript for store state definitions
+- **Keep Stores Focused**: Each store should have a single, clear purpose
+- **API Organization**: Separate API requests by usecase/category in `src/api/v1/` directory
+- **Error Handling**: Consistent error handling in both API functions and store actions
+- **Loading States**: Properly manage loading states in store actions
+
+## File Structure Requirements
+
+```
+src/
+├── api/
+│   └── v1/
+│       ├── users.ts          # User-related API endpoints
+│       ├── products.ts       # Product-related API endpoints
+│       └── auth.ts           # Authentication API endpoints
+├── stores/
+│   ├── user.ts              # User store using userApi
+│   ├── product.ts           # Product store using productApi
+│   └── auth.ts              # Auth store using authApi
+└── types/
+    ├── user.ts              # User interfaces
+    ├── product.ts           # Product interfaces
+    └── common.ts            # Shared API response types
+```
+
+## What to Avoid
+
+### ❌ Don't Create Stores Without API Endpoints
+```typescript
+// ❌ Avoid creating stores without corresponding API functions
+const fetchUsers = () => {
+  return axios.get('/api/users')  // Direct axios call in store
+    .then(response => response.data)
+}
+```
+
+### ❌ Don't Use async/await in API Functions
+```typescript
+// ❌ Avoid async/await pattern
+export const getUsers = async () => {
+  try {
+    const response = await axios.get('/api/users')
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+```
+
+### ❌ Don't Create Simple Setters
+```typescript
+// ❌ Avoid these patterns
+const setUsers = (newUsers) => { users.value = newUsers }
+const setLoading = (loading) => { isLoading.value = loading }
+```
+
+### ✅ Use Proper API Integration and Direct Access
+```typescript
+// ✅ Create dedicated API functions
+// src/api/v1/users.ts
+export const getUsers = () => {
+  return axios.get('/api/v1/users')
+    .then((response) => response.data.data)
+    .catch((error) => {
+      throw new Error(error.response?.data?.message || 'Failed to fetch users')
+    })
+}
+
+// ✅ Use API functions in stores
+// src/stores/user.ts
+const fetchUsers = () => {
+  return userApi.getUsers()
+    .then((users) => {
+      users.value = users
+    })
+    .catch((err) => {
+      error.value = err.message
+    })
+}
+
+// ✅ Use direct access in components
+const { users, isLoading } = storeToRefs(userStore)
+users.value = newUsers           // Direct assignment
+isLoading.value = true          // Direct assignment
+```
+
+## Examples
+
+**Good Store Usage:**
+- User authentication state with auth API
+- Shopping cart data with cart API
+- Application settings with settings API
+- Multi-step form data with form submission API
+- Global notification state with notification API
+
+**Required API Structure for Each Store:**
+- CRUD operations (Create, Read, Update, Delete)
+- Proper error handling with meaningful messages
+- TypeScript interfaces for all request/response types
+- Consistent API response format using `ApiResponseInterface`
+
+**Good Action Examples:**
+- API data fetching with error handling using promises
+- Complex business logic involving multiple API calls with promise chaining
+- Authentication flows with promise chains
+- Data processing and validation before API submission
+
+**Avoid Action Examples:**
+- Simple state assignments
+- Basic array operations
+- Boolean toggles
+- Direct property updates
+- API calls without proper error handling
+---

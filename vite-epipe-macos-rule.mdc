@@ -1,0 +1,32 @@
+---
+alwaysApply: true
+---
+# Vite EPIPE Error Rule (macOS)
+
+When working with Vite on macOS, you can safely ignore EPIPE errors as they are expected behavior.
+
+## Background
+
+EPIPE (Broken Pipe) errors commonly occur on macOS when using Vite development server. These errors happen when the client disconnects from the server while data is still being transmitted, which is normal behavior during development.
+
+## Rule
+
+- **First attempt recovery**: When encountering EPIPE errors in Vite logs or console output, try the following recovery sequence:
+  1. Remove the node_modules folder in the affected project (`rm -rf node_modules`)
+  2. Reinstall dependencies (`make install` or `bun install`)
+- **If recovery fails**: Treat EPIPE errors as expected macOS behavior and ignore them
+- **No extensive debugging**: Do not spend time troubleshooting EPIPE errors beyond the initial recovery attempt
+
+## Common EPIPE Error Messages
+
+- `Error: EPIPE`
+- `write EPIPE`
+- `Broken pipe`
+
+## Rationale
+
+EPIPE errors on macOS can occur due to two main causes:
+1. **Normal behavior**: Broken pipe errors during HTTP connection lifecycle (common and harmless)
+2. **Dependency corruption**: Occasionally caused by corrupted or locked files in node_modules
+
+The recovery strategy addresses potential dependency issues while acknowledging that most EPIPE errors are harmless. If the simple recovery doesn't work, continued debugging is not worthwhile as these errors rarely impact functionality.

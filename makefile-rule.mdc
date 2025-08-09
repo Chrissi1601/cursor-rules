@@ -1,0 +1,144 @@
+---
+description: creating or editing a makefile
+alwaysApply: false
+---
+## Makefile Rule
+
+This application follows strict Makefile conventions for project automation and only creates specific commands when requested.
+
+### Allowed Commands
+
+Only create the following commands and **ONLY when explicitly asked to**:
+
+- **make dev** - Development environment startup
+- **make prod** - Production environment startup  
+- **make setup** - Initial project setup after cloning
+- **make test** - Run project tests
+
+### Command Requirements
+
+#### Development and Production Commands (`make dev` / `make prod`)
+- **Frontend + Backend Projects**: If the project has both frontend and backend components that normally start separately, both commands must start BOTH services simultaneously
+- **Foreground Execution**: All processes must run in the foreground so output is visible to the user
+- **Process Management**: Use techniques like process substitution, `&` with `wait`, or process managers to run multiple services concurrently while keeping output visible
+
+#### Setup Command (`make setup`)
+- **Complete Environment**: Sets up the entire project for first-time use after cloning
+- **Dependencies**: Install all required dependencies for both frontend and backend
+- **Configuration**: Create necessary configuration files, environment files, or initial setup
+- **Database/Services**: Initialize databases, create initial data, or start required services
+- **One-Time Setup**: Should handle everything needed for a new developer to get started
+
+#### Test Command (`make test`)
+- **Comprehensive Testing**: Run all relevant tests for the project (unit, integration, linting, etc.)
+- **Frontend + Backend Projects**: If the project has both components, run tests for both
+- **Exit Codes**: Properly handle test failures by allowing Make to exit with non-zero codes
+- **Parallel Execution**: Run tests in parallel when possible for faster feedback
+- **Output Visibility**: Show test results and failures clearly to the user
+
+### Makefile Structure Standards
+
+```makefile
+# Makefile preamble for reliability
+SHELL := bash
+.ONESHELL:
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
+
+# Set default target
+.DEFAULT_GOAL := help
+
+# Help target for documentation
+help: ## Show available commands
+	@echo "Available commands:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: help dev prod setup test
+```
+
+### Implementation Examples
+
+#### Frontend + Backend Project
+```makefile
+dev: ## Start development servers (frontend + backend)
+	(cd frontend && bun run dev) & \
+	(cd backend && uv run uvicorn main:app --reload) & \
+	wait
+
+prod: ## Start production servers (frontend + backend)  
+	(cd frontend && bun run build && bun run preview) & \
+	(cd backend && uv run uvicorn main:app --host 0.0.0.0) & \
+	wait
+
+setup: ## Complete project setup for new developers
+	@echo "Setting up project..."
+	cd frontend && bun install
+	cd backend && uv sync
+	cd backend && uv run alembic upgrade head
+	@echo "Project setup complete!"
+
+test: ## Run all tests (frontend + backend)
+	@echo "Running frontend tests..."
+	cd frontend && bun run test
+	@echo "Running backend tests..."
+	cd backend && uv run pytest
+	@echo "All tests completed!"
+```
+
+#### Frontend Only Project
+```makefile
+dev: ## Start development server
+	cd frontend && bun run dev
+
+prod: ## Start production server
+	cd frontend && bun run build && bun run preview
+
+setup: ## Setup frontend project
+	cd frontend && bun install
+
+test: ## Run frontend tests
+	cd frontend && bun run test
+```
+
+#### Backend Only Project
+```makefile
+dev: ## Start development server
+	cd backend && uv run uvicorn main:app --reload
+
+prod: ## Start production server
+	cd backend && uv run uvicorn main:app --host 0.0.0.0
+
+setup: ## Setup backend project
+	cd backend && uv sync
+	cd backend && uv run alembic upgrade head
+
+test: ## Run backend tests
+	cd backend && uv run pytest
+```
+
+### Key Principles
+
+1. **Minimal Commands**: Only create `dev`, `prod`, `setup`, and `test` - no additional commands unless specifically requested
+2. **Visible Output**: All services must run in foreground for debugging visibility
+3. **Concurrent Services**: Use `&` and `wait` to run multiple services simultaneously
+4. **Package Manager Consistency**: Always use `bun` for Node.js and `uv` for Python
+5. **Documentation**: Each command must have a `## description` for the help system
+6. **Error Handling**: Use strict shell settings to catch errors early
+7. **Project-Aware**: Adapt commands based on whether project has frontend, backend, or both
+8. **Test Coverage**: Ensure tests cover all relevant aspects of the project
+
+### Restrictions
+
+- **No Custom Commands**: Do not create additional make targets like `lint`, `deploy`, `format`, etc.
+- **No Complex Logic**: Keep commands simple and focused on their core purpose
+- **No Silent Execution**: All output should be visible to the developer
+- **No Background Services**: Avoid running services that detach from the terminal
+
+The Makefile should be a simple, reliable interface for the four core development workflows: development, production, initial setup, and testing.
+
+- **No Background Services**: Avoid running services that detach from the terminal
+
+The Makefile should be a simple, reliable interface for the three core development workflows: development, production, and initial setup.

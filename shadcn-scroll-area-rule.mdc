@@ -1,0 +1,154 @@
+---
+alwaysApply: true
+---
+# Shadcn Vue ScrollArea Implementation Rule
+
+## ScrollArea Component Best Practices
+
+When implementing the shadcn-vue ScrollArea component, follow these critical guidelines to ensure proper scrolling functionality and theme-aware scrollbars.
+
+### Key Requirements
+
+1. **Height Constraints**: ScrollArea MUST have explicit height constraints to function properly
+2. **No Flex-1 Direct**: Never use `flex-1` directly on ScrollArea component
+3. **Theme Awareness**: ScrollArea automatically provides theme-aware scrollbars
+
+### Implementation Patterns
+
+#### Pattern 1: Flex Layout Container (Recommended)
+```vue
+<!-- Correct: Flex container with min-h-0 and ScrollArea with h-full -->
+<div class="flex-1 min-h-0">
+  <ScrollArea class="h-full">
+    <div class="p-6">
+      <!-- Content here -->
+    </div>
+  </ScrollArea>
+</div>
+```
+
+#### Pattern 2: Viewport Height Calculation
+```vue
+<!-- Correct: Specific height calculation -->
+<ScrollArea class="h-[calc(100vh-140px)]">
+  <div class="p-6">
+    <!-- Content here -->
+  </div>
+</ScrollArea>
+```
+
+#### Pattern 3: Fixed Height
+```vue
+<!-- Correct: Fixed height for specific use cases -->
+<ScrollArea class="h-[400px] w-[350px] rounded-md border">
+  <!-- Content here -->
+</ScrollArea>
+```
+
+### Common Mistakes to Avoid
+
+#### ❌ Wrong: Direct flex-1 on ScrollArea
+```vue
+<!-- WRONG: ScrollArea cannot handle flex-1 directly -->
+<ScrollArea class="flex-1">
+  <div>Content</div>
+</ScrollArea>
+```
+
+#### ❌ Wrong: Using max-height
+```vue
+<!-- WRONG: max-height doesn't work with ScrollArea -->
+<ScrollArea class="max-h-screen">
+  <div>Content</div>
+</ScrollArea>
+```
+
+#### ❌ Wrong: No height specification
+```vue
+<!-- WRONG: ScrollArea needs explicit height -->
+<ScrollArea>
+  <div>Content</div>
+</ScrollArea>
+```
+
+### Specific Use Cases
+
+#### Full-Height Application Content
+```vue
+<template>
+  <div class="h-screen flex flex-col">
+    <!-- Header -->
+    <header class="flex-shrink-0">
+      <!-- Header content -->
+    </header>
+    
+    <!-- Scrollable Main Content -->
+    <div class="flex-1 min-h-0">
+      <ScrollArea class="h-full">
+        <div class="p-6">
+          <!-- Main content here -->
+        </div>
+      </ScrollArea>
+    </div>
+  </div>
+</template>
+```
+
+#### Sidebar Content
+```vue
+<template>
+  <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+    <ScrollArea class="h-full">
+      <!-- Sidebar items -->
+    </ScrollArea>
+  </div>
+</template>
+```
+
+#### Layout with Known Header Height
+```vue
+<template>
+  <!-- When you know header takes ~140px -->
+  <ScrollArea class="h-[calc(100vh-140px)]">
+    <div class="p-6">
+      <!-- Content -->
+    </div>
+  </ScrollArea>
+</template>
+```
+
+### Height Calculation Guidelines
+
+- **App with header/nav**: `h-[calc(100vh-140px)]` (adjust px value for actual header height)
+- **Settings layout**: Use flex container pattern with `flex-1 min-h-0` wrapper
+- **Modal/dialog content**: `h-[400px]` or specific fixed height
+- **Sidebar content**: `h-full` within flex container
+
+### Theme Integration
+
+ScrollArea automatically provides theme-aware scrollbars:
+- **Light theme**: Scrollbars use light theme colors
+- **Dark theme**: Scrollbars use dark theme colors
+- **No custom CSS needed**: Avoid webkit scrollbar customizations
+
+### Installation
+
+```bash
+bunx --bun shadcn-vue@latest add scroll-area
+```
+
+### Import
+
+```vue
+<script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area'
+</script>
+```
+
+### Critical Rules Summary
+
+1. ✅ **Always specify height**: Use `h-full`, `h-[calc()]`, or `h-[specific]`
+2. ✅ **Use flex wrapper**: Wrap with `flex-1 min-h-0` for flex layouts
+3. ✅ **Let ScrollArea handle theming**: Don't add custom scrollbar CSS
+4. ❌ **Never use flex-1 directly**: ScrollArea needs explicit height
+5. ❌ **Avoid max-height**: Use specific height calculations instead

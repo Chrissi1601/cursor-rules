@@ -1,0 +1,56 @@
+---
+alwaysApply: true
+---
+
+## Types and Interfaces Organization Rule
+
+This application follows strict guidelines for organizing TypeScript types and interfaces:
+
+- **Separation Requirement**: All types and interfaces must be separated from the files that use them
+- **Types Directory**: Create a dedicated `types` folder in the `src` directory for both backend and frontend
+- **File Organization**: Group related types in dedicated files within the types folder
+- **Naming Convention**: Use descriptive names with "Interface" or "Type" suffixes
+- **Export Pattern**: Export all types and interfaces from their respective files
+- **Import Pattern**: Import types and interfaces at the top of files that use them
+- **Structure Examples**:
+  ```
+  src/
+    types/
+      user.ts          // User-related interfaces
+      api.ts           // API response/request types
+      common.ts        // Shared/common types
+      auth.ts          // Authentication types
+  ```
+- **Type Definition Pattern**: All types and interfaces should follow this structure:
+  ```typescript
+  // In src/types/user.ts
+  export interface UserInterface {
+    id: number
+    name: string
+    email: string
+    avatar?: string
+  }
+  
+  export type UserStatusType = 'active' | 'inactive' | 'pending'
+  
+  export interface UserCreateRequestInterface {
+    name: string
+    email: string
+  }
+  ```
+- **Usage Pattern**: Import and use types consistently:
+  ```typescript
+  // In components or stores
+  import { UserInterface, UserStatusType } from '../types/user'
+  
+  const user: UserInterface = {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@example.com'
+  }
+  ```
+- **Backend Application**: Apply the same structure in backend code with appropriate path adjustments
+- **Shared Types**: Create a shared types directory for types used across both frontend and backend
+- **Index Files**: Use index.ts files to re-export types for easier imports when appropriate
+
+This rule ensures consistent type organization, better maintainability, and clear separation of concerns across the application.

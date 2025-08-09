@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+- Never start or stop servers, the user will do that.

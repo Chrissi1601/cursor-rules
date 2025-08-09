@@ -1,0 +1,8 @@
+---
+description: creating rules for cursor
+alwaysApply: false
+---
+
+# Rule Creation Rule
+
+## rules are used by an ai agent to implement features or fix bugs, so they need to tell the agent what to do and what not to do. i already included some rules.

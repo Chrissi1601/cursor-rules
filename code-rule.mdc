@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+
+## Frontend
+
+- Use shadcn-vue for all UI components.
+- Use tailwind for all CSS styling.
+- Use bun for package management.
+- User pinia for state management
+
+- Do not fill the components with code that is better suited in a class or composable.
+
+### Frontend Requests
+
+- NEVER under any circumstances use async/await, use promises with then and catch instead.
+- ALWAYS use promises with then and catch instead of async/await.
